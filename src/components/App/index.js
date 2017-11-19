@@ -1,19 +1,21 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './style.css';
+import socket from './../../lib/withSocket'
 
 class App extends Component {
 
   state = {users: [],text:''}
   
   componentDidMount() {
-    fetch('/user')
+    fetch('/api/user')
       .then(res => res.json())
       .then(users => this.setState({ users }))
 
-      fetch('/hello')
+      fetch('/api/hello')
       .then(res => res.text())
       .then(text => this.setState({ text }));
+
   }
 
   render() {
