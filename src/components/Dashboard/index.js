@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import socket from './../../lib/withSocket'
 import {withRouter} from "react-router-dom";
-import Navbar from './components/Navbar'
+import Navbar from './../Navbar'
 
 class Dashboard extends Component {
   constructor(props) {
