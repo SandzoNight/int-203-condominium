@@ -17,8 +17,12 @@ class Dashboard extends Component {
 
   render() {
     return (
-      <div className="">
+      <div>
         <Navbar history={this.props.history}/>
+        <div className="d-flex flex-column justify-content-center align-content-center flex-wrap">
+          <h1 className="animated bounceInUp mt-5 align-self-center">Hello, Administrator!</h1>
+          <p className="animated bounceInLeft h4 align-self-center">Start navigating by clicking on the navbar above.</p>
+        </div>
       </div>
     );
   }
