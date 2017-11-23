@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
 import socket from './../../lib/withSocket'
+import {withRouter} from "react-router-dom";
 
 class EmployeeList extends Component {
-
+  handleOnSelectEmp(empid) {
+    this.props.history.push(`/employee/${empid}`)
+  }
   render() {
     let entrys = this.props.entrys
     let i = 1
     return (
-      <table className="table">
+      <table className="table table-hover">
         <thead>
           <tr>
             <th>#</th>
@@ -19,7 +22,7 @@ class EmployeeList extends Component {
         </thead>
         <tbody>
           {entrys.map(entry => (
-            <tr key={entry.empid}>
+            <tr key={entry.empid} onClick={(empid)=>this.handleOnSelectEmp(entry.empid)}>
               <td>{i++})</td>
               <td>{entry.fname}</td>
               <td>{entry.lname}</td>
@@ -33,4 +36,4 @@ class EmployeeList extends Component {
   }
 }
 
-export default EmployeeList;
+export default withRouter(EmployeeList);

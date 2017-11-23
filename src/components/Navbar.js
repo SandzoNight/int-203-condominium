@@ -19,7 +19,7 @@ class Navbar extends Component {
   render() {
     return (
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        <a className="navbar-brand" href="#">Navbar</a>
+        <a className="navbar-brand" href="#">FTBCondo</a>
         <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span className="navbar-toggler-icon"></span>
         </button>
@@ -34,6 +34,9 @@ class Navbar extends Component {
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/building">Buildings</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/owner">Owners</Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/bill">Bills</Link>

@@ -69,7 +69,7 @@ server.get('/api/employee', function(req, res) {
 });
 
 server.get('/api/employee/empid/:id', function(req, res) {
-  var statement = `SELECT * FROM employees WHERE empid="${req.params.id}"`
+  var statement = `SELECT e.*,b.name AS building,p.name AS position FROM employees e LEFT JOIN buildings b ON e.buildingid=b.buildingid LEFT JOIN positions p ON e.positionid=p.positionid WHERE e.empid="${req.params.id}"`
   pool.query(statement, function (err, rows, fields) {
     if (err) {
       throw err
@@ -79,6 +79,56 @@ server.get('/api/employee/empid/:id', function(req, res) {
 });
 server.get('/api/employee/buildingid/:id', function(req, res) {
   var statement = `SELECT * FROM employees WHERE buildingid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/employee/buildingname/:name', function(req, res) {
+  var statement = `SELECT *,b.name building,p.name pos FROM employees e JOIN buildings b ON e.buildingid=b.buildingid JOIN positions p ON p.positionid=e.positionid WHERE e.buildingid=ANY(SELECT buildingid FROM buildings WHERE name LIKE '%${req.params.name}%')`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/employee/positionname/:name', function(req, res) {
+  var statement = `SELECT *,b.name building,p.name pos FROM employees e JOIN buildings b ON e.buildingid=b.buildingid JOIN positions p ON e.positionid=p.positionid WHERE p.positionid=ANY(SELECT positionid FROM positions WHERE name LIKE '%${req.params.name}%')`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/employee/buildingname/:bname/positionname/:pname', function(req, res) {
+  console.log(req.params.pname)
+  console.log(req.params.bname)
+  var statement
+  if(req.params.pname==" " && req.params.bname!=" "){
+    statement = `SELECT *,b.name building,p.name pos FROM employees e 
+    JOIN buildings b ON e.buildingid=b.buildingid 
+    JOIN positions p ON e.positionid=p.positionid 
+    WHERE b.name LIKE '%${req.params.bname}%'`
+  } else if(req.params.bname==" " && req.params.pname!=" "){
+    statement = `SELECT *,b.name building,p.name pos FROM employees e 
+    JOIN buildings b ON e.buildingid=b.buildingid 
+    JOIN positions p ON e.positionid=p.positionid 
+    WHERE p.name LIKE '%${req.params.pname}%'`
+  }else if(req.params.bname==" " && req.params.pname==" "){
+    statement = `SELECT *,b.name building,p.name pos FROM employees e 
+    LEFT JOIN buildings b ON e.buildingid=b.buildingid 
+    LEFT JOIN positions p ON e.positionid=p.positionid`
+  }else {
+    statement = `SELECT *,b.name building,p.name pos FROM employees e 
+    JOIN buildings b ON e.buildingid=b.buildingid 
+    JOIN positions p ON e.positionid=p.positionid 
+    WHERE p.name LIKE '%${req.params.pname}%' AND b.name LIKE '%${req.params.bname}%'`
+    console.log(statement)
+  }
   pool.query(statement, function (err, rows, fields) {
     if (err) {
       throw err

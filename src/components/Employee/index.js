@@ -3,13 +3,14 @@ import socket from './../../lib/withSocket'
 import {withRouter} from "react-router-dom";
 import Navbar from './../Navbar'
 import EmployeeList from './EmployeeList'
+import Emp from './Emp'
 import axios from 'axios'
 
 class Employee extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      entrys: []
+      entrys: [],
     }
   }
   
@@ -18,58 +19,49 @@ class Employee extends Component {
       console.log('not logged in')
       this.props.history.push("/login")
     }
-    this.fetchAll()
+    this.fetchEmpList("","")
+  }
+
+  componentWillReceiveProps(nextProps){
+    let empid = this.props.match.params
   }
 
   htmlElement(id) {
     return document.getElementById(id)
   }
   handleBuildingId(event) {
-    this.setState({buildingid: event.target.value});
+    this.setState({building: event.target.value});
   }
   handlePosition(event) {
     this.setState({position: event.target.value});
   }
-  handleBuildingIdSubmit() {
-    let buildingid = this.htmlElement("buildingid").value
-    console.log(buildingid)
-    if(buildingid=="")
-      this.fetchAll()
-    else
-      this.fetchBuilding(buildingid)
-  }
-  handlePositionSubmit() {
-    // let buildingid = this.htmlElement("buildingid").value
-    // console.log(buildingid)
-    // if(buildingid=="")
-    //   this.fetchAll()
-    // else
-    //   this.fetchBuilding(buildingid)
+  handleBuildingIdSubmit(e) {
+    e.preventDefault()
+    let building = this.htmlElement("building").value
+    let position = this.htmlElement("position").value
+    console.log(position)
+    this.fetchEmpList(building,position)
+    }
+    handlePositionSubmit(e) {
+      e.preventDefault()
+      let building = this.htmlElement("building").value
+      let position = this.htmlElement("position").value
+      console.log(position)
+      this.fetchEmpList(building,position)
   }
   handleAllEmpButton() {
-    //unfinish
-    let buildingid = this.htmlElement("buildingid").value
+    let building = this.htmlElement("building").value
     let position = this.htmlElement("position").value
-    if(buildingid!=="")
-      this.htmlElement("buildingid").value = ""
+    if(building!=="")
+      this.htmlElement("building").value = ""
     if(position!=="")
       this.htmlElement("position").value = ""
-    this.fetchAll()
+      this.fetchEmpList("","")
   }
-  fetchAll() {
+  fetchEmpList(bname,pname) {
+    console.log('fetch both')
     var self = this
-    axios.get(`/api/employee`)
-    .then(function (response) {
-      console.log(response.data)
-      self.setState({entrys:response.data})
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-  }
-  fetchBuilding(bid) {
-    var self = this
-    axios.get(`/api/employee/buildingid/${bid}`)
+    axios.get(`/api/employee/buildingname/${bname!==""?bname:"%20"}/positionname/${pname!==""?pname:"%20"}`)
     .then(function (response) {
       console.log(response.data)
       self.setState({entrys:response.data})
@@ -85,20 +77,27 @@ class Employee extends Component {
         <div className="container mt-4">
           <div className="row">
             <div className="col-sm-3">
+              <p className="h4">Filter</p>
               <div>
                 <button className="btn btn-block" onClick={()=>this.handleAllEmpButton()}>All Employees</button>
               </div>
-              <div className="form-row mt-3">
-                <input id="buildingid" className="form-control col-9" type="text" onChange={(e)=>this.handleBuildingId(e)} placeholder="Building ID"/>
-                <button className="btn col" onClick={()=>this.handleBuildingIdSubmit()}>Go</button>
-              </div>
-              <div className="form-row mt-3">
-                <input id="position" className="form-control col-9" type="text" onChange={(e)=>this.handlePosition(e)} placeholder="Position"/>
-                <button className="btn col" onClick={()=>this.handlePositionSubmit()}>Go</button>
-              </div>
+              <form onSubmit={(e)=>this.handleBuildingIdSubmit(e)}>
+                <div className="form-row mt-3">
+                  <input id="building" className="form-control col-9" type="text" onChange={(e)=>this.handleBuildingId(e)} placeholder="Building name"/>
+                  <button type="submit" className="btn col">Go</button>
+                </div>
+              </form>
+              <form onSubmit={(e)=>this.handlePositionSubmit(e)}>
+                <div className="form-row mt-3">
+                  <input id="position" className="form-control col-9" type="text" onChange={(e)=>this.handlePosition(e)} placeholder="Position"/>
+                  <button type="submit" className="btn col">Go</button>
+                </div>
+              </form>
             </div>
             <div className="col-sm-9">
-              <EmployeeList entrys={this.state.entrys}/>
+              {this.props.match.params.id?
+                <Emp empid={this.props.match.params.id}/>
+              :<EmployeeList entrys={this.state.entrys} history={this.props.history}/>}
             </div>
           </div>
         </div>
