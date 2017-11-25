@@ -1,3 +1,4 @@
+
 require('dotenv').config()
 var express = require('express');
 const PORT = process.env.PORT || 3001;
@@ -9,11 +10,13 @@ const http = server.listen(PORT, () => {
   console.log(`App listening on port ${PORT}!`);
 });
 var mysql = require('mysql')
+var NULL = require('mysql/lib/protocol/constants/types')
 var pool = mysql.createPool({
   host     : process.env.DB_HOST,
   user     : process.env.DB_USER,
   password : process.env.DB_PASS,
-  database : process.env.DB_SCHEMA
+  database : process.env.DB_SCHEMA,
+  dateStrings: 'date'
 });
 pool.on('enqueue', function () {
   console.log('Waiting for available connection slot');
@@ -165,7 +168,7 @@ server.get('/api/waterbill', function(req, res) {
     res.send(rows)
   })
 });
-server.get('/api/waterbill/billid/:id', function(req, res) {
+server.get('/api/bill/water/billid/:id', function(req, res) {
   var statement = `SELECT * FROM waterbills w JOIN rooms r ON w.roomid=r.roomid WHERE billid="${req.params.id}"`
   pool.query(statement, function (err, rows, fields) {
     if (err) {
@@ -242,6 +245,160 @@ server.get('/api/waterbill/buildingid/:id/floor/:floor/status/:status', function
 server.get('/api/waterbill/ownerid/:id', function(req, res) {
   var statement = 
   `SELECT * FROM waterbills w JOIN rooms r ON w.roomid=r.roomid WHERE r.ownerid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get(`/api/bill/water/buildingid/:buildingid/roomno/:roomno/floor/:floor/statusid/:statusid/start/:start/startend/:startend/due/:due/dueend/:dueend/paid/:paid`, function(req, res) {
+  let buildingid = req.params.buildingid
+  let roomno = req.params.roomno
+  let floor = req.params.floor
+  let statusid = req.params.statusid
+  let start = req.params.start
+  let startend = req.params.startend
+  let due = req.params.due
+  let dueend = req.params.dueend
+  let paid = req.params.paid
+  console.log(buildingid)
+  console.log(roomno)
+  console.log(floor)
+  console.log(statusid)
+  console.log(start)
+  console.log(due)
+  console.log(paid)
+  var statement
+  if(buildingid!==" "||roomno!==" "||floor!==" "||statusid!==" "||start!==" "||due!==" "||paid!==" ") {
+    statement = 
+    `${buildingid!==" "?`SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.buildingid="${buildingid}"`:"SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${roomno!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.roomnum="${roomno}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${floor!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.floornum="${floor}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${start!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.startdate BETWEEN '${start}' AND '${startend}'`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${due!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.startdate BETWEEN '${due}' AND '${dueend}'`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${paid!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.paiddate="${paid}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${statusid!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.billstatusid="${statusid}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ORDER BY startdate DESC`
+  }else {
+    statement = "SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM waterbills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid ORDER BY startdate DESC"
+  }
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    console.log(rows)
+    res.send(rows)
+  })
+});
+server.post(`/api/bill/water/billid/:billid/paiddate/:paiddate/statusid/:statusid`, function(req, res) {
+  let billid = req.params.billid
+  let paiddate = req.params.paiddate
+  let statusid = req.params.statusid
+  console.log(billid)
+  console.log(paiddate)
+  console.log(statusid)
+  var statement = `UPDATE waterbills SET paiddate=${paiddate==" "?'NULL':`'${paiddate}'`}, billstatusid='${statusid}' WHERE billid='${billid}'`
+  console.log(statement)
+  pool.query(statement, function (err, result) {
+    if (err) {
+      throw err
+    }
+    console.log(result)
+    res.send(result)
+  })
+});
+
+server.get('/api/bill/maintenance/billid/:id', function(req, res) {
+  var statement = `SELECT * FROM maintenancebills m JOIN rooms r ON m.roomid=r.roomid WHERE billid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows[0])
+  })
+});
+server.get(`/api/bill/maintenance/buildingid/:buildingid/roomno/:roomno/floor/:floor/statusid/:statusid/start/:start/startend/:startend/due/:due/dueend/:dueend/paid/:paid/paidend/:paidend`, function(req, res) {
+  let buildingid = req.params.buildingid
+  let roomno = req.params.roomno
+  let floor = req.params.floor
+  let statusid = req.params.statusid
+  let start = req.params.start
+  let startend = req.params.startend
+  let due = req.params.due
+  let dueend = req.params.dueend
+  let paid = req.params.paid
+  let paidend = req.params.paidend
+  console.log(buildingid)
+  console.log(roomno)
+  console.log(floor)
+  console.log(statusid)
+  console.log(start)
+  console.log(due)
+  console.log(paid)
+  var statement
+  if(buildingid!==" "||roomno!==" "||floor!==" "||statusid!==" "||start!==" "||due!==" "||paid!==" ") {
+    statement = 
+    `${buildingid!==" "?`SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.buildingid="${buildingid}"`:"SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${roomno!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.roomnum="${roomno}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${floor!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE r.floornum="${floor}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${start!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.startdate BETWEEN '${start}' AND '${startend}'`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${due!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.startdate BETWEEN '${due}' AND '${dueend}'`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${paid!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.paiddate BETWEEN '${paid}' AND '${paidend}'`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ${statusid!==" "?`INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid
+    WHERE b.billstatusid="${statusid}"`:"INTERSECT SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid"}
+    ORDER BY startdate DESC`
+  }else {
+    statement = "SELECT b.*,bs.name AS status,r.roomnum,bd.name AS building FROM maintenancebills b JOIN billstatus bs ON b.billstatusid=bs.statusid JOIN rooms r ON b.roomid=r.roomid JOIN buildings bd ON r.buildingid=bd.buildingid ORDER BY startdate DESC"
+  }
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    console.log(rows)
+    res.send(rows)
+  })
+});
+server.post(`/api/bill/maintenance/billid/:billid/paiddate/:paiddate/statusid/:statusid/chargecost/:chargecost/totalcost/:totalcost`, function(req, res) {
+  let billid = req.params.billid
+  let paiddate = req.params.paiddate
+  let statusid = req.params.statusid
+  let chargecost = req.params.chargecost
+  let totalcost = req.params.totalcost
+  console.log(billid)
+  console.log(paiddate)
+  console.log(statusid)
+  console.log(chargecost)
+  console.log(totalcost)
+  var statement = `UPDATE maintenancebills SET paiddate=${paiddate==" "?'NULL':`'${paiddate}'`}, billstatusid='${statusid}', chargecost='${chargecost}', totalcost='${totalcost}' WHERE billid='${billid}'`
+  console.log(statement)
+  pool.query(statement, function (err, result) {
+    if (err) {
+      throw err
+    }
+    console.log(result)
+    res.send(result)
+  })
+});
+
+
+server.get(`/api/billstatus`, function(req, res) {
+  var statement = "SELECT * FROM billstatus"
   pool.query(statement, function (err, rows, fields) {
     if (err) {
       throw err

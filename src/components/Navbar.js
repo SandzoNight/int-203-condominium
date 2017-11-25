@@ -38,9 +38,15 @@ class Navbar extends Component {
             <li className="nav-item">
               <Link className="nav-link" to="/owner">Owners</Link>
             </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/bill">Bills</Link>
-            </li>
+            <li className="nav-item dropdown">
+            <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Bills
+            </a>
+            <div className="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a className="dropdown-item" href="/bill/water">Water bills</a>
+              <a className="dropdown-item" href="/bill/maintenance">Maintenance bills</a>
+            </div>
+          </li>
             <li className="nav-item">
               <Link className="nav-link" to="/employee">Employees</Link>
             </li>
