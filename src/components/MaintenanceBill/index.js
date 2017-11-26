@@ -107,6 +107,15 @@ class WaterBill extends Component {
         <Navbar history={this.props.history}/>
         <div className="container mt-4">
           <div className="row">
+            <div className="col-10">
+              <h2>Maintenance Bills</h2>
+            </div>
+            <div className="col-2">
+              <button className="btn btn-success float-right">+ Add new bill</button>
+            </div>
+          </div>
+          <hr/>
+          <div className="row">
             <div className="col-sm-3">
               <p className="h4">Filter</p>
               <div>

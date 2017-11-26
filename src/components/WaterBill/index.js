@@ -107,6 +107,15 @@ class WaterBill extends Component {
         <Navbar history={this.props.history}/>
         <div className="container mt-4">
           <div className="row">
+            <div className="col-10">
+              <h2>Water Bills</h2>
+            </div>
+            <div className="col-2">
+              <button className="btn btn-success float-right">+ Add new bill</button>
+            </div>
+          </div>
+          <hr/>
+          <div className="row">
             <div className="col-sm-3">
               <p className="h4">Filter</p>
               <div>
@@ -166,7 +175,6 @@ class WaterBill extends Component {
               <button onClick={()=>this.handleSubmit()} className="btn col">Go</button>
             </div>
             <div className="col-sm-9">
-              <button className="btn btn-success float-right">Add</button>
               {this.props.match.params.id?
                 <Bill billid={this.props.match.params.id}/>
               :<BillList entrys={this.state.entrys} history={this.props.history}/>}

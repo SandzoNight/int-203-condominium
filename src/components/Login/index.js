@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import socket from './../../lib/withSocket'
 import {withRouter} from "react-router-dom";
+import SweetAlert from 'sweetalert-react';
 
 class Login extends Component {
   constructor(props) {
@@ -52,19 +53,34 @@ class Login extends Component {
       data = JSON.parse(data)
       console.log(data.userid)
       localStorage.setItem('session_id',data.userid)
-      this.props.history.push("/dashboard")
+      this.setState({
+        status:'pass',
+        show: true,
+        popuptype: "success",
+        popuptext: "Permission Granted"
+      })
+      setTimeout(() => {
+        this.setState({
+          show: false
+        })
+        this.props.history.push("/dashboard")
+      }, 1500);
     }else{
       this.setState({
-        status:'failed'
+        status:'failed',
+        show: true,
+        popuptype: "error",
+        popuptext: "Authentication Failed !"
       })
     }
   }
 
   render() {
     return (
-      <div className="container-fluid">
-        <div className="row">
-          <div className="col-8 offset-2 offset-md-3 col-md-6">
+      <div className="container-fluid loginbg pt-5">
+        <div className="row animated fadeInDown">
+          <div className="card col-8 offset-md-4 col-md-4 pt-3 pb-3">
+            <h2 className="text-center">Condo Management</h2>
             <form onSubmit={this.loginAttempt}>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
@@ -74,11 +90,22 @@ class Login extends Component {
                 <label htmlFor="password">Password</label>
                 <input type="password" className="form-control" id="password" placeholder="" onChange={this.handlePass}/>
               </div>
-              <button className="btn btn-primary">Sign in</button>
+              <button className="btn btn-primary btn-block mt-5">Sign in</button>
             </form>
           </div>
         </div>
-        {this.state.status=='failed'?<h1 className="text-center text-danger">Authentication Failed!</h1>:''}
+        {/* {this.state.status=='failed'?<h1 className="text-center text-danger">Authentication Failed!</h1>:''} */}
+        <SweetAlert
+          show={this.state.show}
+          title={this.state.popuptext}
+          type={this.state.popuptype}
+          onConfirm={() => {
+            this.setState({ show: false });
+          }}
+          onEscapeKey={() => {
+            this.setState({ delpopup: false })
+          }}
+        />
       </div> 
     );
   }

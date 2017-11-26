@@ -24,7 +24,7 @@ class EmployeeList extends Component {
         </thead>
         <tbody>
           {entrys.map(entry => (
-            <tr key={entry.billid} onClick={(billid)=>this.handleOnSelectEmp(entry.billid)}>
+            <tr className="clickable" key={entry.billid} onClick={(billid)=>this.handleOnSelectEmp(entry.billid)}>
               <td>{entry.billid}</td>
               <td>{entry.roomnum}</td>
               <td>{entry.waterused}</td>

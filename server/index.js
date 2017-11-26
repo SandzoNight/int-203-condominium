@@ -70,7 +70,6 @@ server.get('/api/employee', function(req, res) {
     res.send(rows)
   })
 });
-
 server.get('/api/employee/empid/:id', function(req, res) {
   var statement = `SELECT e.*,b.name AS building,p.name AS position FROM employees e LEFT JOIN buildings b ON e.buildingid=b.buildingid LEFT JOIN positions p ON e.positionid=p.positionid WHERE e.empid="${req.params.id}"`
   pool.query(statement, function (err, rows, fields) {
@@ -139,6 +138,94 @@ server.get('/api/employee/buildingname/:bname/positionname/:pname', function(req
     res.send(rows)
   })
 });
+server.put(`/api/employee/add/:fname/:lname/:citizenid/:telno/:email/:salary/:address/:tumbol/:amphoe/:province/:country/:postcode/:positionid/:buildingid`, function(req, res) {
+  let fname = req.params.fname
+  let lname = req.params.lname
+  let citizenid = req.params.citizenid
+  let telno = req.params.telno
+  let email = req.params.email
+  let salary = req.params.salary
+  let address = req.params.address
+  let tumbol = req.params.tumbol
+  let amphoe = req.params.amphoe
+  let province = req.params.province
+  let country = req.params.country
+  let postcode = req.params.postcode
+  let positionid = req.params.positionid
+  let buildingid = req.params.buildingid
+  var statement = `
+  INSERT INTO employees (fname,lname,citizenid,telno,email,salary,address,tumbol,amphoe,province,country,
+  postcode,positionid,buildingid) VALUES
+  ('${fname}','${lname}',${citizenid},'${telno}','${email}','${salary}','${address}','${tumbol}'
+  ,'${amphoe}','${province}','${country}','${postcode}',${positionid},${buildingid==" "?'NULL':buildingid})
+  `
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.delete('/api/employee/empid/:id', function(req, res) {
+  var statement = `DELETE FROM employees WHERE empid=${req.params.id}`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+
+server.get('/api/owner/', function(req, res) {
+  var statement = `SELECT * FROM owners`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/owner/ownerid/:id', function(req, res) {
+  var statement = `SELECT o.*,b.name AS building,r.roomNum FROM owners o LEFT JOIN rooms r ON o.ownerid=r.ownerid LEFT JOIN buildings b ON r.buildingid=b.buildingid WHERE o.ownerid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows[0])
+  })
+});
+server.get('/api/owner/name/:name/email/:email', function(req, res) {
+  let name = req.params.name
+  let email = req.params.email
+  var statement
+  if(name==" " && email==" ") {
+    statement = `SELECT * FROM owners o`
+  }else if(name!==" " && email==" ") {
+    statement = `SELECT * FROM owners o WHERE CONCAT(fname,' ',lname) LIKE '%${name}%'`
+  }else if(name==" " && email!==" ") {
+    statement = `SELECT * FROM owners o WHERE email LIKE '${email}'`
+  }else if(name!=="" && email!==" ") {
+    statement = `SELECT * FROM owners o WHERE CONCAT(fname,' ',lname) LIKE '%${name}%' AND email LIKE '%${email}%'`
+  }
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/owner/ownedroom/ownerid/:id', function(req, res) {
+  let ownerid=req.params.id
+  var statement = `SELECT r.roomNum,b.name AS building FROM rooms r LEFT JOIN buildings b ON r.buildingid=b.buildingid WHERE r.ownerid='${ownerid}'`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
 
 server.get('/api/building', function(req, res) {
   var statement = `SELECT * FROM buildings`
@@ -155,7 +242,7 @@ server.get('/api/building/buildingid/:id', function(req, res) {
     if (err) {
       throw err
     }
-    res.send(rows)
+    res.send(rows[0])
   })
 });
 
@@ -396,6 +483,73 @@ server.post(`/api/bill/maintenance/billid/:billid/paiddate/:paiddate/statusid/:s
   })
 });
 
+server.get('/api/room/buildingid/:id', function(req, res) {
+  var statement = `SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid WHERE buildingid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/room/buildingid/:id/roomno/:roomno/floor/:floor/status/:status', function(req, res) {
+  let building = req.params.id
+  let roomno = req.params.roomno
+  let floor = req.params.floor
+  let status = req.params.status==" "?" ":req.params.status=="hasowner"?1:0
+  let statement
+  if(roomno!==" "||floor!==" "||status!==" ") {
+    statement =
+    `${roomno!==" "?`SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid WHERE buildingid=${building}
+    AND r.roomnum="${roomno}"`:`SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid WHERE buildingid=${building}`}
+    ${floor!==" "?`INTERSECT SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid WHERE buildingid=${building}
+    AND r.floornum='${floor}'`:`INTERSECT SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid WHERE buildingid=${building}`}
+    ${status!==" "?`INTERSECT SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid  WHERE buildingid=${building}
+    AND ownerid ${status==0?'IS NULL':'IS NOT NULL'}`:`INTERSECT SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid  WHERE buildingid=${building}`}
+    ORDER BY roomnum
+    `
+  }else {
+    statement = `SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid  WHERE buildingid=${building} ORDER BY roomnum`
+  }
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
+server.get('/api/room/roomid/:id', function(req, res) {
+  var statement = `SELECT * FROM rooms r JOIN roomsizes s ON r.sizeid=s.sizeid LEFT JOIN owners o ON r.ownerid=o.ownerid WHERE roomid="${req.params.id}"`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows[0])
+  })
+});
+server.post('/api/room/roomid/:id/ownerid/:ownerid', function(req, res) {
+  let roomid = req.params.id
+  let ownerid = req.params.ownerid
+  var statement = `UPDATE rooms SET ownerid=${ownerid==" "?'NULL':`'${ownerid}'`} WHERE roomid='${roomid}'`
+  console.log(statement)
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows[0])
+  })
+});
+
+server.get('/api/position', function(req, res) {
+  var statement = `SELECT * FROM positions`
+  pool.query(statement, function (err, rows, fields) {
+    if (err) {
+      throw err
+    }
+    res.send(rows)
+  })
+});
 
 server.get(`/api/billstatus`, function(req, res) {
   var statement = "SELECT * FROM billstatus"

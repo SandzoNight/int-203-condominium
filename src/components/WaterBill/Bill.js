@@ -92,7 +92,7 @@ class Bill extends Component {
     })
   }
   handleBack() {
-    this.props.history.push("/bill/maintenance")
+    this.props.history.push("/bill/water")
   }
   handleEdit() {
     this.setState({

@@ -24,6 +24,9 @@ class Employee extends Component {
 
   componentWillReceiveProps(nextProps){
     let empid = this.props.match.params
+    this.fetchEmpList("","")
+    // if(empid.id==null)
+    //   this.props.match.params={}
   }
 
   htmlElement(id) {
@@ -58,6 +61,9 @@ class Employee extends Component {
       this.htmlElement("position").value = ""
       this.fetchEmpList("","")
   }
+  handleAddButton() {
+    this.props.history.push("/addemployee")
+  }
   fetchEmpList(bname,pname) {
     console.log('fetch both')
     var self = this
@@ -75,6 +81,15 @@ class Employee extends Component {
       <div>
         <Navbar history={this.props.history}/>
         <div className="container mt-4">
+          <div className="row">
+            <div className="col-9">
+              <h2>Employees List</h2>
+            </div>
+            <div className="col-3 text-right">
+              <button className="btn btn-success" onClick={()=>this.handleAddButton()}>+ Add new employee</button>
+            </div>
+              <hr/>
+          </div>
           <div className="row">
             <div className="col-sm-3">
               <p className="h4">Filter</p>
